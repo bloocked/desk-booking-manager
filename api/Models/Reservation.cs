@@ -10,6 +10,6 @@ public class Reservation
 
     // navigation properties
     
-    public User User { get; set; }
-    public Desk Desk { get; set; }
+    public User User { get; set; } = null!;
+    public Desk Desk { get; set; } = null!;
 }

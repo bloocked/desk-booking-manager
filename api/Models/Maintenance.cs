@@ -9,5 +9,5 @@ public class Maintenance
 
     // navigation properties
 
-    public Desk Desk { get; set; }
+    public Desk Desk { get; set; } = null!;
 }
