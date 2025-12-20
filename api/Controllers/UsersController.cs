@@ -15,7 +15,7 @@ public class UsersController : ControllerBase
         _context = context;
     }
 
-    [HttpGet]
+    [HttpGet("{id}")]
     public async Task<IActionResult> GetUser(int id)
     {
         var user = await _context.Users.FindAsync(id);
