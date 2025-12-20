@@ -4,6 +4,7 @@ namespace DTOs.Reservations;
 
 public class ReservationResponseDto
 {
+    public int Id { get; set; }
     public int UserId { get; set; }
     public int DeskId { get; set; }
     public DateOnly StartDate { get; set; }

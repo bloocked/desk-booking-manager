@@ -37,6 +37,7 @@ public class ReservationsController : ControllerBase
 
         var reservations = await query.Select(r => new ReservationResponseDto
         {
+            Id = r.Id,
             UserId = r.UserId,
             DeskId = r.DeskId,
             StartDate = r.StartDate,
