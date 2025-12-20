@@ -2,6 +2,8 @@ using Data;
 using Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Enums;
+using DTOs.Reservations;
 
 namespace Controllers;
 
@@ -19,43 +21,31 @@ public class ReservationsController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetReservations(
         [FromQuery] int? userId,
-        [FromQuery] int? deskId,
-        [FromQuery] string? status) // can i make this clearer?
+        [FromQuery] int? deskId)
     {
         var query = _context.Reservations.AsQueryable();
 
-        if (userId != null) 
+        if (userId != null)
         {
             query = query.Where(r => r.UserId == userId);
         }
 
-        if (deskId != null) 
+        if (deskId != null)
         {
             query = query.Where(r => r.DeskId == deskId);
         }
 
-        if (status != null)
+        var reservations = await query.Select(r => new ReservationResponseDto
         {
-            var today = DateOnly.FromDateTime(DateTime.UtcNow.Date);
-            
-            switch (status.ToLower())
-            {
-                case "active":
-                    query = query.Where(r => r.StartDate <= today && r.EndDate >= today);
-                    break;
-                case "upcoming":
-                    query = query.Where(r => r.StartDate > today);
-                    break;
-                case "past":
-                    query = query.Where(r => r.EndDate < today);
-                    break;
-                default:
-                    return BadRequest("Invalid status value. Allowed values are: active, upcoming, past.");
-            }
-        }
+            UserId = r.UserId,
+            DeskId = r.DeskId,
+            StartDate = r.StartDate,
+            EndDate = r.EndDate,
+            Status = GetStatus(r, DateOnly.FromDateTime(DateTime.UtcNow.Date))
+        })
+        .ToListAsync();
 
-        var reservations = await query.ToListAsync();
-        return Ok(reservations); // map to dto later
+        return Ok(reservations);
     }
 
     [HttpGet("{id}")]
@@ -112,4 +102,13 @@ public class ReservationsController : ControllerBase
         await _context.SaveChangesAsync();
         return NoContent();
     }
+
+
+    private static ReservationStatus GetStatus(Reservation r, DateOnly today)
+    {
+        if (r.EndDate < today) return ReservationStatus.Past;
+        if (r.StartDate > today) return ReservationStatus.Upcoming;
+        return ReservationStatus.Active;
+    }
+
 }
