@@ -17,9 +17,44 @@ public class ReservationsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetReservations()
+    public async Task<IActionResult> GetReservations(
+        [FromQuery] int? userId,
+        [FromQuery] int? deskId,
+        [FromQuery] string? status) // can i make this clearer?
     {
-        var reservations = await _context.Reservations.ToListAsync();
+        var query = _context.Reservations.AsQueryable();
+
+        if (userId != null) 
+        {
+            query = query.Where(r => r.UserId == userId);
+        }
+
+        if (deskId != null) 
+        {
+            query = query.Where(r => r.DeskId == deskId);
+        }
+
+        if (status != null)
+        {
+            var today = DateOnly.FromDateTime(DateTime.UtcNow.Date);
+            
+            switch (status.ToLower())
+            {
+                case "active":
+                    query = query.Where(r => r.StartDate <= today && r.EndDate >= today);
+                    break;
+                case "upcoming":
+                    query = query.Where(r => r.StartDate > today);
+                    break;
+                case "past":
+                    query = query.Where(r => r.EndDate < today);
+                    break;
+                default:
+                    return BadRequest("Invalid status value. Allowed values are: active, upcoming, past.");
+            }
+        }
+
+        var reservations = await query.ToListAsync();
         return Ok(reservations); // map to dto later
     }
 
