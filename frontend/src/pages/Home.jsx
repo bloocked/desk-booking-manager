@@ -1,8 +1,31 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const Home = () => {
     const [toDate, setToDate] = useState(getFormattedDefaultDate());
     const [fromDate, setFromDate] = useState(getFormattedDefaultDate());
+    const [desks, setDesks] = useState([]);
+    const [user, setUser] = useState(null);
+    const [loadingData, setLoadingData] = useState(true);
+
+    useEffect(() => {
+        const apiUrl = import.meta.env.VITE_API_URL;
+        const userId = import.meta.env.VITE_DEFAULT_USER_ID;
+
+        const loadData = async () => {
+            const [user, desks] = await Promise.all([
+                fetch(`${apiUrl}/Users/${userId}`)
+                    .then((res) => res.json())
+                    .then((data) => setUser(data)),
+
+                fetch(`${apiUrl}/Desks`)
+                    .then((res) => res.json())
+                    .then((data) => setDesks(data)),
+            ]);
+            setLoadingData(false);
+        };
+
+        loadData();
+    }, []);
 
     function handleSubmit(event) {
         event.preventDefault();
@@ -10,6 +33,8 @@ const Home = () => {
         console.log("From Date:", fromDate);
         console.log("To Date:", toDate);
     }
+
+    if (loadingData) return <h1>Loading...</h1>;
 
     return (
         <div>
@@ -21,14 +46,11 @@ const Home = () => {
                     setDate={setFromDate}
                     minDate={getFormattedDefaultDate()}
                 />
-                <DatePicker 
-                    label="To:"
-                    date={toDate}
-                    setDate={setToDate}
-                    minDate={fromDate}
-                />
+                <DatePicker label="To:" date={toDate} setDate={setToDate} minDate={fromDate} />
                 <button type="submit">See availability</button>
             </form>
+
+            <DeskContainer desks={desks} />
         </div>
     );
 };
@@ -47,20 +69,22 @@ const DatePicker = ({ label, date, setDate, minDate }) => {
     );
 };
 
-const TableCard = ({table}) => {
-    
-
+const DeskCard = ({ desk }) => {
     return (
         <div>
-            <h2>Table Card</h2>
+            <button>{desk.number}</button>
         </div>
     );
-}
+};
 
-const TableContainer = ({tables}) => {
+const DeskContainer = ({ desks }) => {
+    if (desks.length === 0) return <h2>No desks.</h2>;
+
     return (
         <div>
-            <h2>Table Container</h2>
+            {desks.map((desk) => (
+                <DeskCard key={desk.id} desk={desk} />
+            ))}
         </div>
     );
 };
