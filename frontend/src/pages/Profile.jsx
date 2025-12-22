@@ -51,7 +51,7 @@ const ReservationCard = ({ reservation }) => {
     );
 }
 
-const ReservationsList = ( { reservations, title }) => {
+const ReservationsList = ( { reservations, title } ) => {
     return (
         <div>
             <h2>{title}</h2>

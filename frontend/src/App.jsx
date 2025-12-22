@@ -1,7 +1,15 @@
+import { Route, Routes } from 'react-router'
+import Profile from './pages/Profile.jsx'
+
 function App() {
   return (
-    <h1>Hello, world!</h1>
-  )
+    <div>
+      <Routes>
+        <Route path="/" element={<h1>Home Page</h1>} />
+        <Route path="/profile" element={<Profile />} />
+      </Routes>
+    </div>
+  );
 }
 
-export default App
+export default App;
