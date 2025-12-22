@@ -45,6 +45,8 @@ const Profile = () => {
     );
 };
 
+export default Profile;
+
 const ReservationCard = ({ reservation }) => {
     return (
         <div>
@@ -69,5 +71,3 @@ const ReservationsList = ({ reservations, title }) => {
         </div>
     );
 };
-
-export default Profile;
