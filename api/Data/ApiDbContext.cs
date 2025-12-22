@@ -28,26 +28,24 @@ public class ApiDbContext : DbContext
 
         modelBuilder.Entity<Desk>(entity =>
         {
-            entity.HasIndex(e => e.DeskNumber).IsUnique();
+            entity.HasIndex(e => e.Number).IsUnique();
         });
 
         modelBuilder.Entity<Reservation>(entity =>
         {
-            entity.HasKey(e => e.Id);
             entity.HasOne(e => e.User)
                   .WithMany(u => u.Reservations)
                   .HasForeignKey(e => e.UserId);
 
             entity.HasOne(e => e.Desk)
-                  .WithMany()
+                  .WithMany(d => d.Reservations)
                   .HasForeignKey(e => e.DeskId);
         });
 
         modelBuilder.Entity<Maintenance>(entity =>
         {
-            entity.HasKey(e => e.Id);
             entity.HasOne(e => e.Desk)
-                  .WithMany()
+                  .WithMany(d => d.Maintenances)
                   .HasForeignKey(e => e.DeskId);
         });
     }

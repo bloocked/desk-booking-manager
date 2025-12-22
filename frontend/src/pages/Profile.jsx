@@ -1,21 +1,21 @@
 import { useEffect, useState } from "react";
 
+const API_URL = import.meta.env.VITE_API_URL;
+const USER_ID = import.meta.env.VITE_DEFAULT_USER_ID;
+
 const Profile = () => {
     const [user, setUser] = useState(null);
     const [reservations, setReservations] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const apiUrl = import.meta.env.VITE_API_URL;
-        const userId = import.meta.env.VITE_DEFAULT_USER_ID;
-
         const loadData = async () => {
             const [userData, reservationsData] = await Promise.all([
-                fetch(`${apiUrl}/Users/${userId}`)
+                fetch(`${API_URL}/Users/${USER_ID}`)
                     .then((res) => res.json())
                     .then((data) => setUser(data)),
 
-                fetch(`${apiUrl}/Reservations?userId=${userId}`)
+                fetch(`${API_URL}/Reservations?userId=${USER_ID}`)
                     .then((res) => res.json())
                     .then((data) => setReservations(data)),
             ]);

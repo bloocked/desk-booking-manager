@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
 
+const API_URL = import.meta.env.VITE_API_URL;
+const USER_ID = import.meta.env.VITE_DEFAULT_USER_ID;
+
 const Home = () => {
     const [toDate, setToDate] = useState(getFormattedDefaultDate());
     const [fromDate, setFromDate] = useState(getFormattedDefaultDate());
@@ -8,16 +11,13 @@ const Home = () => {
     const [loadingData, setLoadingData] = useState(true);
 
     useEffect(() => {
-        const apiUrl = import.meta.env.VITE_API_URL;
-        const userId = import.meta.env.VITE_DEFAULT_USER_ID;
-
         const loadData = async () => {
             const [user, desks] = await Promise.all([
-                fetch(`${apiUrl}/Users/${userId}`)
+                fetch(`${API_URL}/Users/${USER_ID}`)
                     .then((res) => res.json())
                     .then((data) => setUser(data)),
 
-                fetch(`${apiUrl}/Desks`)
+                fetch(`${API_URL}/Desks`)
                     .then((res) => res.json())
                     .then((data) => setDesks(data)),
             ]);
@@ -50,7 +50,7 @@ const Home = () => {
                 <button type="submit">See availability</button>
             </form>
 
-            <DeskContainer desks={desks} />
+            <DeskContainer desks={desks} user={user} fromDate={fromDate} toDate={toDate} />
         </div>
     );
 };
@@ -69,21 +69,30 @@ const DatePicker = ({ label, date, setDate, minDate }) => {
     );
 };
 
-const DeskCard = ({ desk }) => {
+const DeskCard = ({ desk, user, fromDate, toDate }) => {
+    const isOccupied = desk.reservations.some((r) => r.startDate < toDate && r.endDate > fromDate);
+
     return (
-        <div>
-            <button>{desk.number}</button>
+        <div className="desk-card">
+            <p>{desk.number}</p>
+            {isOccupied && <p>Occupied</p>}
         </div>
     );
 };
 
-const DeskContainer = ({ desks }) => {
+const DeskContainer = ({ desks, user, fromDate, toDate }) => {
     if (desks.length === 0) return <h2>No desks.</h2>;
 
     return (
-        <div>
+        <div className="desk-container">
             {desks.map((desk) => (
-                <DeskCard key={desk.id} desk={desk} />
+                <DeskCard
+                    key={desk.id}
+                    desk={desk}
+                    user={user}
+                    fromDate={fromDate}
+                    toDate={toDate}
+                />
             ))}
         </div>
     );

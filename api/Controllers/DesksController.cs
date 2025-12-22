@@ -1,6 +1,9 @@
 using Data;
+using DTOs.Desks;
+using DTOs.Reservations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Models;
 
 namespace Controllers;
 
@@ -18,18 +21,68 @@ public class DesksController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetDesks()
     {
-        var desks = await _context.Desks.ToListAsync();
-        return Ok(desks); // map to dto later
+        var desks = await _context.Desks
+            .Include(d => d.Reservations)
+            .Include(d => d.Maintenances)
+            .ToListAsync();
+
+        var deskDtos = desks.Select(desk => new DeskResponseDto {
+            Id = desk.Id,
+            Number = desk.Number,
+            Reservations = desk.Reservations.Select(r => new ReservationResponseDto
+            {
+                Id = r.Id,
+                UserId = r.UserId,
+                DeskId = r.DeskId,
+                StartDate = r.StartDate,
+                EndDate = r.EndDate
+            }).ToList(),
+            Maintenances = desk.Maintenances.Select(m => new MaintenanceResponseDto
+            {
+                Id = m.Id,
+                DeskId = m.DeskId,
+                StartDate = m.StartDate,
+                EndDate = m.EndDate
+            }).ToList()
+        }).ToList(); // apparently makes it faster?
+
+        return Ok(deskDtos);
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetDesk(int id)
     {
-        var desk = await _context.Desks.FindAsync(id);
+        var desk = await _context.Desks
+            .Include(d => d.Reservations)
+            .Include(d => d.Maintenances)
+            .FirstOrDefaultAsync(d => d.Id == id);
+            
         if (desk == null)
         {
             return NotFound();
         }
+
+        var deskDto = new DeskResponseDto
+        {
+            Id = desk.Id,
+            Number = desk.Number,
+                        Reservations = desk.Reservations.Select(r => new ReservationResponseDto
+            {
+                Id = r.Id,
+                UserId = r.UserId,
+                DeskId = r.DeskId,
+                StartDate = r.StartDate,
+                EndDate = r.EndDate
+            }).ToList(),
+            Maintenances = desk.Maintenances.Select(m => new MaintenanceResponseDto
+            {
+                Id = m.Id,
+                DeskId = m.DeskId,
+                StartDate = m.StartDate,
+                EndDate = m.EndDate
+            }).ToList()
+        };
+
         return Ok(desk); // map to dto later
     }
 }

@@ -56,11 +56,11 @@ using (var scope = app.Services.CreateScope())
     );
 
     dbContext.Desks.AddRange(
-        new Desk { DeskNumber = 101 },
-        new Desk { DeskNumber = 102 },
-        new Desk { DeskNumber = 103 },
-        new Desk { DeskNumber = 104 },
-        new Desk { DeskNumber = 105 }
+        new Desk { Number = 101 },
+        new Desk { Number = 102 },
+        new Desk { Number = 103 },
+        new Desk { Number = 104 },
+        new Desk { Number = 105 }
     );
     await dbContext.SaveChangesAsync();
 
