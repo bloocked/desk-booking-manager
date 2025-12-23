@@ -1,8 +1,11 @@
 const DatePicker = ({ id, label, date, setDate, minDate, maxDate }) => {
     return (
-        <>
-            <label htmlFor="from-date">{label}</label>
+        <div className="flex items-center mb-2 gap-2">
+            <label htmlFor={id} className="w-20 text-xl">
+                {label}
+            </label>
             <input
+                className="w-40 border border-gray-300 rounded p-1 text-xl"
                 id={id}
                 type="date"
                 min={minDate}
@@ -10,7 +13,7 @@ const DatePicker = ({ id, label, date, setDate, minDate, maxDate }) => {
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
             />
-        </>
+        </div>
     );
 };
 

@@ -101,6 +101,19 @@ const DeskCard = ({ desk, user, fromDate, toDate, onReservationUpdate }) => {
         }
     }, [isHovered, deskStatus]);
 
+    const getStatusColor = () => {
+        switch (deskStatus) {
+            case DESK_STATUS.AVAILABLE:
+                return "bg-green-100";
+            case DESK_STATUS.OCCUPIED_SELF:
+                return "bg-blue-100";
+            case DESK_STATUS.OCCUPIED_OTHER:
+                return "bg-gray-100";
+            default:
+                return "bg-white";
+        }
+    };
+
     const renderDeskActions = () => {
         if (!isHovered) return null;
 
@@ -122,19 +135,25 @@ const DeskCard = ({ desk, user, fromDate, toDate, onReservationUpdate }) => {
     };
 
     return (
-        <div className="desk-card" onMouseEnter={handleMouseOver} onMouseLeave={handleMouseOut}>
-            <p>{desk.number}</p>
-            <p>Status: {deskStatus.replace("-", " ")}</p>
+        <div
+            className={`desk-card border-2 rounded p-4 h-35 text-center flex flex-col justify-center ${getStatusColor()}`}
+            onMouseEnter={handleMouseOver}
+            onMouseLeave={handleMouseOut}
+        >
+            {!isHovered && <p className="text-2xl">{desk.number}</p>}
+            {isHovered && renderDeskActions()}
             {showReservationModal && (
                 <ReservationModal
                     desk={desk}
                     initialFromDate={fromDate}
                     initialToDate={toDate}
-                    onClose={() => setShowReservationModal(false)}
+                    onClose={() => {
+                        setShowReservationModal(false);
+                        setIsHovered(false);
+                    }}
                     onConfirm={handleReserve}
                 />
             )}
-            {renderDeskActions()}
         </div>
     );
 };
@@ -142,9 +161,23 @@ const DeskCard = ({ desk, user, fromDate, toDate, onReservationUpdate }) => {
 export default DeskCard;
 
 const ReserveButton = ({ onClick }) => {
-    return <button onClick={onClick}>Reserve</button>;
+    return (
+        <button
+            className="border-2 border-green-500 rounded p-2 bg-green-100 hover:bg-green-200 text-green-700 font-semibold transition-colors"
+            onClick={onClick}
+        >
+            Reserve
+        </button>
+    );
 };
 
 const CancelButton = ({ onClick }) => {
-    return <button onClick={onClick}>Cancel</button>;
+    return (
+        <button
+            className="border-2 border-blue-500 rounded p-2 bg-blue-100 hover:bg-blue-200 text-blue-700 font-semibold transition-colors"
+            onClick={onClick}
+        >
+            Cancel Reservation
+        </button>
+    );
 };

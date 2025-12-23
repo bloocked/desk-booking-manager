@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { getFormattedDefaultDate } from "../utils/date";
 import DatePicker from "../components/DatePicker";
 import DeskContainer from "../components/Desk/DeskContainer";
+import NavButton from "../components/Button/NavButton";
 
 const API_URL = import.meta.env.VITE_API_URL;
 const USER_ID = import.meta.env.VITE_DEFAULT_USER_ID;
@@ -25,11 +26,10 @@ const Home = () => {
 
             const data = await response.json();
             setUser(data);
-
         } catch (error) {
             console.error("Error loading user data:", error);
         }
-    }
+    };
 
     const loadDesks = async () => {
         try {
@@ -46,7 +46,7 @@ const Home = () => {
         } catch (error) {
             console.error("Error loading desks data:", error);
         }
-    }
+    };
 
     useEffect(() => {
         const loadData = async () => {
@@ -67,9 +67,17 @@ const Home = () => {
     if (loading) return <h1>Loading...</h1>;
 
     return (
-        <div>
-            <form id="date-range-form" onSubmit={handleSubmit}>
-                <h2>Select reservation date range:</h2>
+        <div className="min-h-screen m-15">
+            <form
+                id="date-range-form"
+                className="flex flex-col m-4 pb-4 border-b-2 border-gray-300"
+                onSubmit={handleSubmit}
+            >
+                <div className="flex items-center justify-between pb-2">
+                    <h2 className="text-4xl pb-4">Select reservation date range:</h2>
+                    <NavButton to="/profile" label="Go to Profile" />
+                </div>
+
                 <DatePicker
                     id="from-date"
                     label="From:"
@@ -85,14 +93,13 @@ const Home = () => {
                     setDate={setToDate}
                     minDate={fromDate}
                 />
-                <button type="submit">See availability</button>
             </form>
 
-            <DeskContainer 
-                desks={desks} 
-                user={user} 
-                fromDate={fromDate} 
-                toDate={toDate} 
+            <DeskContainer
+                desks={desks}
+                user={user}
+                fromDate={fromDate}
+                toDate={toDate}
                 onReservationUpdate={loadDesks}
             />
         </div>
