@@ -102,6 +102,8 @@ const DeskCard = ({ desk, user, fromDate, toDate, onReservationUpdate }) => {
     }, [isHovered, deskStatus]);
 
     const renderDeskActions = () => {
+        if (!isHovered) return null;
+
         if (deskStatus === DESK_STATUS.AVAILABLE && !showReservationModal) {
             return <ReserveButton onClick={() => setShowReservationModal(true)} />;
         }
