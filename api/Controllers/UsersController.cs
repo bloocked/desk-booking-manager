@@ -1,4 +1,3 @@
-using Models;
 using Data;
 using Microsoft.AspNetCore.Mvc;
 using DTOs.Users;

@@ -26,10 +26,10 @@ const DeskCard = ({ desk, user, fromDate, toDate, onReservationUpdate }) => {
     const isOccupiedByOther = Boolean(otherUserReservation);
     const isOccupiedBySelf = Boolean(selfReservation);
 
-    if (isOccupiedByOther) {
-        deskStatus = DESK_STATUS.OCCUPIED_OTHER;
-    } else if (isOccupiedBySelf) {
+    if (isOccupiedBySelf) {
         deskStatus = DESK_STATUS.OCCUPIED_SELF;
+    } else if (isOccupiedByOther) {
+        deskStatus = DESK_STATUS.OCCUPIED_OTHER;
     }
 
     async function handleMouseOver() {
@@ -87,7 +87,6 @@ const DeskCard = ({ desk, user, fromDate, toDate, onReservationUpdate }) => {
             if (onReservationUpdate) {
                 await onReservationUpdate();
             }
-
         } catch (error) {
             alert("Failed to cancel reservation");
         }
@@ -102,16 +101,28 @@ const DeskCard = ({ desk, user, fromDate, toDate, onReservationUpdate }) => {
         }
     }, [isHovered, deskStatus]);
 
+    const renderDeskActions = () => {
+        if (deskStatus === DESK_STATUS.AVAILABLE && !showReservationModal) {
+            return <ReserveButton onClick={() => setShowReservationModal(true)} />;
+        }
+
+        if (deskStatus === DESK_STATUS.OCCUPIED_SELF) {
+            return <CancelButton onClick={handleCancel} />;
+        }
+
+        if (deskStatus === DESK_STATUS.OCCUPIED_OTHER && reservedOtherDetails) {
+            return (
+                <p>
+                    Reserved by: {reservedOtherDetails.firstName} {reservedOtherDetails.lastName}
+                </p>
+            );
+        }
+    };
+
     return (
         <div className="desk-card" onMouseEnter={handleMouseOver} onMouseLeave={handleMouseOut}>
             <p>{desk.number}</p>
-            {isOccupiedBySelf && <p>Occupied by self</p>}
-
-            {isOccupiedByOther && <p>Occupied by Other</p>}
-
-            {isHovered && !showReservationModal && deskStatus === DESK_STATUS.AVAILABLE && (
-                <ReserveButton onClick={() => setShowReservationModal(true)} />
-            )}
+            <p>Status: {deskStatus.replace("-", " ")}</p>
             {showReservationModal && (
                 <ReservationModal
                     desk={desk}
@@ -121,14 +132,7 @@ const DeskCard = ({ desk, user, fromDate, toDate, onReservationUpdate }) => {
                     onConfirm={handleReserve}
                 />
             )}
-
-            {isHovered && deskStatus === DESK_STATUS.OCCUPIED_SELF && <CancelButton onClick={handleCancel} />}
-
-            {isHovered && deskStatus === DESK_STATUS.OCCUPIED_OTHER && reservedOtherDetails && (
-                <p>
-                    Reserved by: {reservedOtherDetails.firstName} {reservedOtherDetails.lastName}
-                </p>
-            )}
+            {renderDeskActions()}
         </div>
     );
 };
