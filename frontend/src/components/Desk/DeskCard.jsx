@@ -5,6 +5,7 @@ const API_URL = import.meta.env.VITE_API_URL;
 
 const DESK_STATUS = {
     AVAILABLE: "available",
+    MAINTENANCE: "maintenance",
     OCCUPIED_SELF: "occupied-self",
     OCCUPIED_OTHER: "occupied-other",
 };
@@ -14,8 +15,10 @@ const DeskCard = ({ desk, user, fromDate, toDate, onReservationUpdate }) => {
     const [reservedOtherDetails, setReservedUserDetails] = useState(null);
     const [showReservationModal, setShowReservationModal] = useState(false);
 
-    const isOccupied = (reservation) =>
-        reservation.startDate < toDate && reservation.endDate > fromDate;
+    const isOccupied = (scheduledOccupancy) =>
+        scheduledOccupancy.startDate <= toDate && scheduledOccupancy.endDate >= fromDate;
+
+    const activeMaintenances = desk.maintenances.filter((m) => isOccupied(m));
 
     const activeReservations = desk.reservations.filter((r) => isOccupied(r));
     const otherUserReservation = activeReservations.find((r) => r.userId !== user.id);
@@ -23,10 +26,13 @@ const DeskCard = ({ desk, user, fromDate, toDate, onReservationUpdate }) => {
 
     let deskStatus = DESK_STATUS.AVAILABLE;
 
+    const isMaintenanceActive = activeMaintenances.length > 0;
     const isOccupiedByOther = Boolean(otherUserReservation);
     const isOccupiedBySelf = Boolean(selfReservation);
 
-    if (isOccupiedBySelf) {
+    if (isMaintenanceActive) {
+        deskStatus = DESK_STATUS.MAINTENANCE;
+    } else if (isOccupiedBySelf) {
         deskStatus = DESK_STATUS.OCCUPIED_SELF;
     } else if (isOccupiedByOther) {
         deskStatus = DESK_STATUS.OCCUPIED_OTHER;
@@ -61,6 +67,7 @@ const DeskCard = ({ desk, user, fromDate, toDate, onReservationUpdate }) => {
 
             const data = await response.json();
             setShowReservationModal(false);
+            setIsHovered(false);
 
             // Refetch desks data to show updated state
             if (onReservationUpdate) {
@@ -105,6 +112,8 @@ const DeskCard = ({ desk, user, fromDate, toDate, onReservationUpdate }) => {
         switch (deskStatus) {
             case DESK_STATUS.AVAILABLE:
                 return "bg-green-100";
+            case DESK_STATUS.MAINTENANCE:
+                return "bg-red-100";
             case DESK_STATUS.OCCUPIED_SELF:
                 return "bg-blue-100";
             case DESK_STATUS.OCCUPIED_OTHER:
@@ -118,7 +127,17 @@ const DeskCard = ({ desk, user, fromDate, toDate, onReservationUpdate }) => {
         if (!isHovered) return null;
 
         if (deskStatus === DESK_STATUS.AVAILABLE && !showReservationModal) {
-            return <ReserveButton onClick={() => setShowReservationModal(true)} />;
+            return (
+                <ReserveButton
+                    onClick={() => {
+                        setShowReservationModal(true);
+                    }}
+                />
+            );
+        }
+
+        if (deskStatus === DESK_STATUS.MAINTENANCE) {
+            return <p>Under Maintenance</p>;
         }
 
         if (deskStatus === DESK_STATUS.OCCUPIED_SELF) {

@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Data;
 using Models;
 using System.Text.Json.Serialization;
+using utils;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -50,59 +51,7 @@ using (var scope = app.Services.CreateScope())
     var dbContext = scope.ServiceProvider.GetRequiredService<ApiDbContext>();
     await dbContext.Database.EnsureCreatedAsync();
 
-    dbContext.Users.AddRange(
-        new User { FirstName = "Demo", LastName = "User" },
-        new User { FirstName = "John", LastName = "Reservationer" }
-    );
-
-    dbContext.Desks.AddRange(
-        new Desk { Number = 101 },
-        new Desk { Number = 102 },
-        new Desk { Number = 103 },
-        new Desk { Number = 104 },
-        new Desk { Number = 105 }
-    );
-    await dbContext.SaveChangesAsync();
-
-    dbContext.Reservations.AddRange(
-        new Reservation
-        {
-            UserId = 1,
-            DeskId = 1,
-            StartDate = DateOnly.FromDateTime(DateTime.UtcNow.Date),
-            EndDate = DateOnly.FromDateTime(DateTime.UtcNow.Date.AddDays(2))
-        },
-        new Reservation
-        {
-            UserId = 2,
-            DeskId = 2,
-            StartDate = DateOnly.FromDateTime(DateTime.UtcNow.Date.AddDays(1)),
-            EndDate = DateOnly.FromDateTime(DateTime.UtcNow.Date.AddDays(3))
-        },
-        new Reservation
-        {
-            UserId = 2,
-            DeskId = 2,
-            StartDate = DateOnly.FromDateTime(DateTime.UtcNow.Date.AddDays(5)),
-            EndDate = DateOnly.FromDateTime(DateTime.UtcNow.Date.AddDays(7))
-        }
-    );
-
-    dbContext.Maintenances.AddRange(
-        new Maintenance
-        {
-            DeskId = 3,
-            StartDate = DateOnly.FromDateTime(DateTime.UtcNow.Date),
-            EndDate = DateOnly.FromDateTime(DateTime.UtcNow.Date.AddDays(1))
-        },
-        new Maintenance
-        {
-            DeskId = 4,
-            StartDate = DateOnly.FromDateTime(DateTime.UtcNow.Date.AddDays(2)),
-            EndDate = DateOnly.FromDateTime(DateTime.UtcNow.Date.AddDays(4))
-        });
-
-    await dbContext.SaveChangesAsync();
+    Seeder.Seed(dbContext);
 }
 
 app.Run();

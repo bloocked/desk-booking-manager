@@ -73,14 +73,14 @@ public class ReservationsController : ControllerBase
             return BadRequest("Invalid UserId");
         }
 
-        if (reservationDto.StartDate >= reservationDto.EndDate)
+        if (reservationDto.StartDate > reservationDto.EndDate)
         {
             return BadRequest("StartDate must be before EndDate");
         }
 
         if (await _context.Reservations.AnyAsync(r => r.DeskId == reservationDto.DeskId &&
-                                                       r.EndDate > reservationDto.StartDate &&
-                                                       r.StartDate < reservationDto.EndDate))
+                                                       r.EndDate >= reservationDto.StartDate &&
+                                                       r.StartDate <= reservationDto.EndDate))
         {
             return Conflict("Desk is already reserved for the selected dates");
         }

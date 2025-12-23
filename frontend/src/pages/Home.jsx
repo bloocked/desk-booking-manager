@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { getFormattedDefaultDate } from "../utils/date";
-import DatePicker from "../components/DatePicker";
+import DatePicker from "../components/Date/DatePicker";
 import DeskContainer from "../components/Desk/DeskContainer";
 import NavButton from "../components/Button/NavButton";
 
