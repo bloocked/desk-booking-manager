@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getFormattedDefaultDate } from "../utils/date";
+import { apiFetch } from "../utils/api";
 import DatePicker from "../components/Date/DatePicker";
 import DeskContainer from "../components/Desk/DeskContainer";
 import NavButton from "../components/Button/NavButton";
@@ -14,55 +15,21 @@ const Home = () => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    const loadUser = async () => {
-        try {
-            const response = await fetch(`${API_URL}/Users/${USER_ID}`);
-
-            if (!response.ok) {
-                const error = await response.text();
-                alert(`Failed to load user data: ${error}`);
-                return;
-            }
-
-            const data = await response.json();
-            setUser(data);
-        } catch (error) {
-            console.error("Error loading user data:", error);
-        }
+    const loadDesks = () => {
+        apiFetch(`Desks`)
+            .then((desksData) => setDesks(desksData))
+            .catch((error) => alert(`Failed to load desks: ${error.message}`));
     };
 
-    const loadDesks = async () => {
-        try {
-            const response = await fetch(`${API_URL}/Desks`);
-
-            if (!response.ok) {
-                const error = await response.text();
-                alert(`Failed to load desks data: ${error}`);
-                return;
-            }
-
-            const data = await response.json();
-            setDesks(data);
-        } catch (error) {
-            console.error("Error loading desks data:", error);
-        }
+    const loadUser = () => {
+        apiFetch(`Users/${USER_ID}`)
+            .then((userData) => setUser(userData))
+            .catch((error) => alert(`Failed to load user: ${error.message}`));
     };
 
     useEffect(() => {
-        const loadData = async () => {
-            await Promise.all([loadUser(), loadDesks()]);
-            setLoading(false);
-        };
-
-        loadData();
+        Promise.all([loadUser(), loadDesks()]).finally(() => setLoading(false));
     }, []);
-
-    function handleSubmit(event) {
-        event.preventDefault();
-
-        console.log("From Date:", fromDate);
-        console.log("To Date:", toDate);
-    }
 
     if (loading) return <h1>Loading...</h1>;
 
@@ -71,7 +38,6 @@ const Home = () => {
             <form
                 id="date-range-form"
                 className="flex flex-col m-4 pb-4 border-b-2 border-gray-300"
-                onSubmit={handleSubmit}
             >
                 <div className="flex items-center justify-between pb-2">
                     <h2 className="text-4xl pb-4">Select reservation date range:</h2>

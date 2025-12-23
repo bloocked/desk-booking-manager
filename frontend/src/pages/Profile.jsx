@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import NavButton from "../components/Button/NavButton";
+import { apiFetch } from "../utils/api";
 
 const API_URL = import.meta.env.VITE_API_URL;
 const USER_ID = import.meta.env.VITE_DEFAULT_USER_ID;
@@ -10,21 +11,13 @@ const Profile = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const loadData = async () => {
-            const [userData, reservationsData] = await Promise.all([
-                fetch(`${API_URL}/Users/${USER_ID}`)
-                    .then((res) => res.json())
-                    .then((data) => setUser(data)),
-
-                fetch(`${API_URL}/Reservations?userId=${USER_ID}`)
-                    .then((res) => res.json())
-                    .then((data) => setReservations(data)),
-            ]);
-
-            setLoading(false);
-        };
-
-        loadData();
+        Promise.all([apiFetch(`Users/${USER_ID}`), apiFetch(`Reservations?userId=${USER_ID}`)])
+            .then(([userData, reservationsData]) => {
+                setUser(userData);
+                setReservations(reservationsData);
+            })
+            .catch((error) => alert(`Failed to load data: ${error.message}`))
+            .finally(() => setLoading(false));
     }, []);
 
     const activeReservations = reservations.filter((r) => r.status === "Active");

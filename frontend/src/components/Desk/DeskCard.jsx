@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { apiFetch } from "../../utils/api.js";
 import ReservationModal from "../Reservation/ReservationModal.jsx";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -38,6 +39,8 @@ const DeskCard = ({ desk, user, fromDate, toDate, onReservationUpdate }) => {
         deskStatus = DESK_STATUS.OCCUPIED_OTHER;
     }
 
+    const isSingularDate = fromDate === toDate;
+
     async function handleMouseOver() {
         setIsHovered(true);
     }
@@ -47,64 +50,55 @@ const DeskCard = ({ desk, user, fromDate, toDate, onReservationUpdate }) => {
     }
 
     async function handleReserve(deskId, fromDate, toDate) {
-        try {
-            const response = await fetch(`${API_URL}/Reservations`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    deskId: deskId,
-                    userId: user.id,
-                    startDate: fromDate,
-                    endDate: toDate,
-                }),
-            });
-
-            if (!response.ok) {
-                const error = await response.text();
-                alert(`Reservation failed: ${error}`);
-                return;
-            }
-
-            const data = await response.json();
-            setShowReservationModal(false);
-            setIsHovered(false);
-
-            // Refetch desks data to show updated state
-            if (onReservationUpdate) {
-                await onReservationUpdate();
-            }
-        } catch (error) {
+        const response = await apiFetch(`Reservations/`, {
+            method: "POST",
+            body: JSON.stringify({
+                deskId: deskId,
+                userId: user.id,
+                startDate: fromDate,
+                endDate: toDate,
+            }),
+        }).catch((error) => {
             alert("Failed to create reservation");
+        });
+
+        setShowReservationModal(false);
+        setIsHovered(false);
+
+        // Refetch desks data to show updated state
+        if (onReservationUpdate) {
+            await onReservationUpdate();
         }
     }
 
     async function handleCancel() {
-        try {
-            const response = await fetch(`${API_URL}/Reservations/${selfReservation.id}`, {
+        if (isSingularDate) {
+            await apiFetch(`Reservations/${selfReservation.id}?cancelDate=${fromDate}`, {
                 method: "DELETE",
+            }).catch((error) => {
+                alert("Failed to cancel reservation for the selected date");
             });
+        } else {
+            await apiFetch(`Reservations/${selfReservation.id}`, {
+                method: "DELETE",
+            }).catch((error) => {
+                alert("Failed to cancel reservation");
+            });
+        }
 
-            if (!response.ok) {
-                const error = await response.text();
-                alert(`Cancellation failed: ${error}`);
-                return;
-            }
-
-            // Refetch desks data to show updated state
-            if (onReservationUpdate) {
-                await onReservationUpdate();
-            }
-        } catch (error) {
-            alert("Failed to cancel reservation");
+        // refetch desks data to show updated state
+        if (onReservationUpdate) {
+            await onReservationUpdate();
         }
     }
 
     useEffect(() => {
         if (isHovered && deskStatus === DESK_STATUS.OCCUPIED_OTHER && !reservedOtherDetails) {
             const otherUserId = otherUserReservation.userId;
-            const details = fetch(`${API_URL}/Users/${otherUserId}`)
-                .then((res) => res.json())
-                .then((data) => setReservedUserDetails(data));
+
+            apiFetch(`Users/${otherUserId}`)
+                .then((data) => setReservedUserDetails(data))
+                .catch((error) => console.error("Failed to load user details:", error));
         }
     }, [isHovered, deskStatus]);
 
@@ -126,7 +120,7 @@ const DeskCard = ({ desk, user, fromDate, toDate, onReservationUpdate }) => {
     const renderDeskActions = () => {
         if (!isHovered) return null;
 
-        if (deskStatus === DESK_STATUS.AVAILABLE && !showReservationModal) {
+        if (deskStatus === DESK_STATUS.AVAILABLE) {
             return (
                 <ReserveButton
                     onClick={() => {
@@ -141,7 +135,8 @@ const DeskCard = ({ desk, user, fromDate, toDate, onReservationUpdate }) => {
         }
 
         if (deskStatus === DESK_STATUS.OCCUPIED_SELF) {
-            return <CancelButton onClick={handleCancel} />;
+            const title = isSingularDate ? "Cancel for This Day" : "Cancel Reservation";
+            return <CancelButton onClick={handleCancel} title={title} />;
         }
 
         if (deskStatus === DESK_STATUS.OCCUPIED_OTHER && reservedOtherDetails) {
@@ -190,13 +185,13 @@ const ReserveButton = ({ onClick }) => {
     );
 };
 
-const CancelButton = ({ onClick }) => {
+const CancelButton = ({ onClick, title }) => {
     return (
         <button
             className="border-2 border-blue-500 rounded p-2 bg-blue-100 hover:bg-blue-200 text-blue-700 font-semibold transition-colors"
             onClick={onClick}
         >
-            Cancel Reservation
+            {title}
         </button>
     );
 };

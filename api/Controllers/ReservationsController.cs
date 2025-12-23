@@ -72,7 +72,7 @@ public class ReservationsController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreateReservation(ReservationCreateDto reservationDto) // sanitize input via dto later
+    public async Task<IActionResult> CreateReservation(ReservationCreateDto reservationDto)
     {
         if (await _context.Desks.FindAsync(reservationDto.DeskId) == null)
         {
@@ -106,7 +106,7 @@ public class ReservationsController : ControllerBase
 
         _context.Reservations.Add(reservation);
         await _context.SaveChangesAsync();
-        return CreatedAtAction(nameof(GetReservation), new { id = reservation.Id },new ReservationResponseDto
+        return CreatedAtAction(nameof(GetReservation), new { id = reservation.Id }, new ReservationResponseDto
         {
             Id = reservation.Id,
             UserId = reservation.UserId,
@@ -117,7 +117,7 @@ public class ReservationsController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> CancelReservation(int id)
+    public async Task<IActionResult> CancelReservation(int id, [FromQuery] DateOnly? cancelDate)
     {
         var reservation = await _context.Reservations.FindAsync(id);
         if (reservation == null)
@@ -125,7 +125,20 @@ public class ReservationsController : ControllerBase
             return NotFound();
         }
 
-        _context.Reservations.Remove(reservation);
+        if (cancelDate != null && (cancelDate > reservation.EndDate || cancelDate < reservation.StartDate))
+        {
+            return BadRequest("CancelDate must be within the reservation period");
+        }
+
+        if (cancelDate != null)
+        {
+            await CancelSpecificDay(reservation, cancelDate.Value);
+        }
+        else
+        {
+            _context.Reservations.Remove(reservation);
+        }
+
         await _context.SaveChangesAsync();
         return NoContent();
     }
@@ -136,6 +149,40 @@ public class ReservationsController : ControllerBase
         if (r.EndDate < today) return ReservationStatus.Past;
         if (r.StartDate > today) return ReservationStatus.Upcoming;
         return ReservationStatus.Active;
+    }
+
+    private async Task CancelSpecificDay(Reservation reservation, DateOnly cancelDate)
+    {
+        if (reservation.StartDate == cancelDate && reservation.EndDate == cancelDate)
+        {
+            _context.Reservations.Remove(reservation);
+        }
+        else if (reservation.StartDate == cancelDate)
+        {
+            reservation.StartDate = reservation.StartDate.AddDays(1);
+            _context.Reservations.Update(reservation);
+        }
+        else if (reservation.EndDate == cancelDate)
+        {
+            reservation.EndDate = reservation.EndDate.AddDays(-1);
+            _context.Reservations.Update(reservation);
+        }
+        else
+        {
+            var newReservation = new Reservation
+            {
+                DeskId = reservation.DeskId,
+                UserId = reservation.UserId,
+                StartDate = cancelDate.AddDays(1),
+                EndDate = reservation.EndDate
+            };
+
+            reservation.EndDate = cancelDate.AddDays(-1);
+            _context.Reservations.Update(reservation);
+            _context.Reservations.Add(newReservation);
+        }
+
+        await _context.SaveChangesAsync();
     }
 
 }
