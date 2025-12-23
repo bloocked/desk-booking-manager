@@ -30,17 +30,21 @@ const Profile = () => {
     const pastReservations = reservations.filter((r) => r.status === "Past");
 
     if (loading) {
-        return <div>Loading...</div>;
+        return (
+            <div className="flex justify-center items-center min-h-screen text-xl">Loading...</div>
+        );
     }
 
     return (
-        <div>
-            <h1>Profile Page</h1>
-            <h1>
+        <div className="max-w-4xl mx-auto p-6">
+            <h1 className="text-3xl font-bold text-center mb-2">Profile Page</h1>
+            <h2 className="text-xl text-center text-gray-600 mb-8">
                 {user.firstName} {user.lastName}
-            </h1>
-            <ReservationsList reservations={activeReservations} title="Active Reservations" />
-            <ReservationsList reservations={pastReservations} title="Past Reservations" />
+            </h2>
+            <div className="space-y-8">
+                <ReservationsList reservations={activeReservations} title="Active Reservations" />
+                <ReservationsList reservations={pastReservations} title="Past Reservations" />
+            </div>
         </div>
     );
 };
@@ -49,24 +53,28 @@ export default Profile;
 
 const ReservationCard = ({ reservation }) => {
     return (
-        <div>
-            <h2>
-                Desk: {reservation.deskId} | From: {reservation.startDate} To: {reservation.endDate}
-            </h2>
+        <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+            <p className="text-gray-700">
+                <span className="font-semibold">Desk:</span> {reservation.deskId} |
+                <span className="font-semibold ml-2">From:</span> {reservation.startDate}
+                <span className="font-semibold ml-2">To:</span> {reservation.endDate}
+            </p>
         </div>
     );
 };
 
 const ReservationsList = ({ reservations, title }) => {
     return (
-        <div>
-            <h2>{title}</h2>
+        <div className="bg-gray-50 rounded-lg p-6">
+            <h2 className="text-2xl font-semibold mb-4 text-gray-800">{title}</h2>
             {reservations.length === 0 ? (
-                <p>No {title.toLowerCase()}.</p>
+                <p className="text-gray-500 italic">No {title.toLowerCase()}.</p>
             ) : (
-                reservations.map((reservation) => (
-                    <ReservationCard key={reservation.id} reservation={reservation} />
-                ))
+                <div className="space-y-3">
+                    {reservations.map((reservation) => (
+                        <ReservationCard key={reservation.id} reservation={reservation} />
+                    ))}
+                </div>
             )}
         </div>
     );
