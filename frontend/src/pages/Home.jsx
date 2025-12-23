@@ -13,17 +13,44 @@ const Home = () => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
+    const loadUser = async () => {
+        try {
+            const response = await fetch(`${API_URL}/Users/${USER_ID}`);
+
+            if (!response.ok) {
+                const error = await response.text();
+                alert(`Failed to load user data: ${error}`);
+                return;
+            }
+
+            const data = await response.json();
+            setUser(data);
+
+        } catch (error) {
+            console.error("Error loading user data:", error);
+        }
+    }
+
+    const loadDesks = async () => {
+        try {
+            const response = await fetch(`${API_URL}/Desks`);
+
+            if (!response.ok) {
+                const error = await response.text();
+                alert(`Failed to load desks data: ${error}`);
+                return;
+            }
+
+            const data = await response.json();
+            setDesks(data);
+        } catch (error) {
+            console.error("Error loading desks data:", error);
+        }
+    }
+
     useEffect(() => {
         const loadData = async () => {
-            const [user, desks] = await Promise.all([
-                fetch(`${API_URL}/Users/${USER_ID}`)
-                    .then((res) => res.json())
-                    .then((data) => setUser(data)),
-
-                fetch(`${API_URL}/Desks`)
-                    .then((res) => res.json())
-                    .then((data) => setDesks(data)),
-            ]);
+            await Promise.all([loadUser(), loadDesks()]);
             setLoading(false);
         };
 
@@ -61,7 +88,13 @@ const Home = () => {
                 <button type="submit">See availability</button>
             </form>
 
-            <DeskContainer desks={desks} user={user} fromDate={fromDate} toDate={toDate} />
+            <DeskContainer 
+                desks={desks} 
+                user={user} 
+                fromDate={fromDate} 
+                toDate={toDate} 
+                onReservationUpdate={loadDesks}
+            />
         </div>
     );
 };

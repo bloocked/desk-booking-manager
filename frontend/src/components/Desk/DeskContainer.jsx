@@ -1,6 +1,6 @@
 import DeskCard from "./DeskCard";
 
-const DeskContainer = ({ desks, user, fromDate, toDate }) => {
+const DeskContainer = ({ desks, user, fromDate, toDate, onReservationUpdate }) => {
     if (desks.length === 0) return <h2>No desks.</h2>;
 
     return (
@@ -12,6 +12,7 @@ const DeskContainer = ({ desks, user, fromDate, toDate }) => {
                     user={user}
                     fromDate={fromDate}
                     toDate={toDate}
+                    onReservationUpdate={onReservationUpdate}
                 />
             ))}
         </div>

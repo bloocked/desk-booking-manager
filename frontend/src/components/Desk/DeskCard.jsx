@@ -8,7 +8,7 @@ const DESK_STATUS = {
     OCCUPIED_OTHER: "occupied-other",
 };
 
-const DeskCard = ({ desk, user, fromDate, toDate }) => {
+const DeskCard = ({ desk, user, fromDate, toDate, onReservationUpdate }) => {
     const [isHovered, setIsHovered] = useState(false);
     const [reservedOtherDetails, setReservedUserDetails] = useState(null);
     const [showReservationModal, setShowReservationModal] = useState(false);
@@ -39,20 +39,57 @@ const DeskCard = ({ desk, user, fromDate, toDate }) => {
         setIsHovered(false);
     }
 
-    function handleReserve(deskId, fromDate, toDate) {
-        const response = fetch(`${API_URL}/Reservations`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                deskId: deskId,
-                userId: user.id,
-                startDate: fromDate,
-                endDate: toDate,
-            }),
-        }).then((res) => res.json());
+    async function handleReserve(deskId, fromDate, toDate) {
+        try {
+            const response = await fetch(`${API_URL}/Reservations`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    deskId: deskId,
+                    userId: user.id,
+                    startDate: fromDate,
+                    endDate: toDate,
+                }),
+            });
 
-        console.log("Reservation response:", response);
-        setShowReservationModal(false);
+            if (!response.ok) {
+                const error = await response.text();
+                alert(`Reservation failed: ${error}`);
+                return;
+            }
+
+            const data = await response.json();
+            setShowReservationModal(false);
+
+            // Refetch desks data to show updated state
+            if (onReservationUpdate) {
+                await onReservationUpdate();
+            }
+        } catch (error) {
+            alert("Failed to create reservation");
+        }
+    }
+
+    async function handleCancel() {
+        try {
+            const response = await fetch(`${API_URL}/Reservations/${selfReservation.id}`, {
+                method: "DELETE",
+            });
+
+            if (!response.ok) {
+                const error = await response.text();
+                alert(`Cancellation failed: ${error}`);
+                return;
+            }
+
+            // Refetch desks data to show updated state
+            if (onReservationUpdate) {
+                await onReservationUpdate();
+            }
+
+        } catch (error) {
+            alert("Failed to cancel reservation");
+        }
     }
 
     useEffect(() => {
@@ -71,7 +108,7 @@ const DeskCard = ({ desk, user, fromDate, toDate }) => {
 
             {isOccupiedByOther && <p>Occupied by Other</p>}
 
-            {isHovered && deskStatus === DESK_STATUS.AVAILABLE && (
+            {isHovered && !showReservationModal && deskStatus === DESK_STATUS.AVAILABLE && (
                 <ReserveButton onClick={() => setShowReservationModal(true)} />
             )}
             {showReservationModal && (
@@ -84,7 +121,7 @@ const DeskCard = ({ desk, user, fromDate, toDate }) => {
                 />
             )}
 
-            {isHovered && deskStatus === DESK_STATUS.OCCUPIED_SELF && <CancelButton />}
+            {isHovered && deskStatus === DESK_STATUS.OCCUPIED_SELF && <CancelButton onClick={handleCancel} />}
 
             {isHovered && deskStatus === DESK_STATUS.OCCUPIED_OTHER && reservedOtherDetails && (
                 <p>
@@ -101,8 +138,8 @@ const ReserveButton = ({ onClick }) => {
     return <button onClick={onClick}>Reserve</button>;
 };
 
-const CancelButton = () => {
-    return <button>Cancel</button>;
+const CancelButton = ({ onClick }) => {
+    return <button onClick={onClick}>Cancel</button>;
 };
 
 const ReservationModal = ({ desk, initialFromDate, initialToDate, onClose, onConfirm }) => {
@@ -111,7 +148,7 @@ const ReservationModal = ({ desk, initialFromDate, initialToDate, onClose, onCon
 
     const handleSubmit = (event) => {
         event.preventDefault();
-        
+
         onConfirm(desk.id, fromDate, toDate);
     };
 
