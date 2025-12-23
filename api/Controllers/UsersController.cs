@@ -31,6 +31,6 @@ public class UsersController : ControllerBase
             LastName = user.LastName
         };
 
-        return Ok(userDto); // map to dto later
+        return Ok(userDto);
     }
 }

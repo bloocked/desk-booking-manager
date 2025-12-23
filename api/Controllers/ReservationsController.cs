@@ -57,7 +57,18 @@ public class ReservationsController : ControllerBase
         {
             return NotFound();
         }
-        return Ok(reservation); // map to dto later
+
+        var reservationDto = new ReservationResponseDto
+        {
+            Id = reservation.Id,
+            UserId = reservation.UserId,
+            DeskId = reservation.DeskId,
+            StartDate = reservation.StartDate,
+            EndDate = reservation.EndDate,
+            Status = GetStatus(reservation, DateOnly.FromDateTime(DateTime.UtcNow.Date))
+        };
+
+        return Ok(reservationDto);
     }
 
     [HttpPost]
