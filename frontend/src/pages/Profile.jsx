@@ -20,7 +20,7 @@ const Profile = () => {
             .finally(() => setLoading(false));
     }, []);
 
-    const activeReservations = reservations.filter((r) => r.status === "Active");
+    const activeReservations = reservations.filter((r) => r.status === "Active" || r.status === "Upcoming");
     const pastReservations = reservations.filter((r) => r.status === "Past");
 
     if (loading) {
