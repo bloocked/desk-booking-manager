@@ -61,33 +61,48 @@ public class ReservationsController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreateReservation(Reservation reservation) // sanitize input via dto later
+    public async Task<IActionResult> CreateReservation(ReservationCreateDto reservationDto) // sanitize input via dto later
     {
-        if (await _context.Desks.FindAsync(reservation.DeskId) == null)
+        if (await _context.Desks.FindAsync(reservationDto.DeskId) == null)
         {
             return BadRequest("Invalid DeskId");
         }
 
-        if (await _context.Users.FindAsync(reservation.UserId) == null)
+        if (await _context.Users.FindAsync(reservationDto.UserId) == null)
         {
             return BadRequest("Invalid UserId");
         }
 
-        if (reservation.StartDate >= reservation.EndDate)
+        if (reservationDto.StartDate >= reservationDto.EndDate)
         {
             return BadRequest("StartDate must be before EndDate");
         }
 
-        if (await _context.Reservations.AnyAsync(r => r.DeskId == reservation.DeskId &&
-                                                       r.EndDate > reservation.StartDate &&
-                                                       r.StartDate < reservation.EndDate))
+        if (await _context.Reservations.AnyAsync(r => r.DeskId == reservationDto.DeskId &&
+                                                       r.EndDate > reservationDto.StartDate &&
+                                                       r.StartDate < reservationDto.EndDate))
         {
             return Conflict("Desk is already reserved for the selected dates");
         }
 
+        var reservation = new Reservation
+        {
+            DeskId = reservationDto.DeskId,
+            UserId = reservationDto.UserId,
+            StartDate = reservationDto.StartDate,
+            EndDate = reservationDto.EndDate
+        };
+
         _context.Reservations.Add(reservation);
         await _context.SaveChangesAsync();
-        return CreatedAtAction(nameof(GetReservation), new { id = reservation.Id }, reservation);
+        return CreatedAtAction(nameof(GetReservation), new { id = reservation.Id },new ReservationResponseDto
+        {
+            Id = reservation.Id,
+            UserId = reservation.UserId,
+            DeskId = reservation.DeskId,
+            StartDate = reservation.StartDate,
+            EndDate = reservation.EndDate,
+        });
     }
 
     [HttpDelete("{id}")]

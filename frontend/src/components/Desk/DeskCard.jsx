@@ -11,6 +11,7 @@ const DESK_STATUS = {
 const DeskCard = ({ desk, user, fromDate, toDate }) => {
     const [isHovered, setIsHovered] = useState(false);
     const [reservedOtherDetails, setReservedUserDetails] = useState(null);
+    const [showReservationModal, setShowReservationModal] = useState(false);
 
     const isOccupied = (reservation) =>
         reservation.startDate < toDate && reservation.endDate > fromDate;
@@ -38,6 +39,22 @@ const DeskCard = ({ desk, user, fromDate, toDate }) => {
         setIsHovered(false);
     }
 
+    function handleReserve(deskId, fromDate, toDate) {
+        const response = fetch(`${API_URL}/Reservations`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                deskId: deskId,
+                userId: user.id,
+                startDate: fromDate,
+                endDate: toDate,
+            }),
+        }).then((res) => res.json());
+
+        console.log("Reservation response:", response);
+        setShowReservationModal(false);
+    }
+
     useEffect(() => {
         if (isHovered && deskStatus === DESK_STATUS.OCCUPIED_OTHER && !reservedOtherDetails) {
             const otherUserId = otherUserReservation.userId;
@@ -51,8 +68,24 @@ const DeskCard = ({ desk, user, fromDate, toDate }) => {
         <div className="desk-card" onMouseEnter={handleMouseOver} onMouseLeave={handleMouseOut}>
             <p>{desk.number}</p>
             {isOccupiedBySelf && <p>Occupied by self</p>}
+
             {isOccupiedByOther && <p>Occupied by Other</p>}
+
+            {isHovered && deskStatus === DESK_STATUS.AVAILABLE && (
+                <ReserveButton onClick={() => setShowReservationModal(true)} />
+            )}
+            {showReservationModal && (
+                <ReservationModal
+                    desk={desk}
+                    initialFromDate={fromDate}
+                    initialToDate={toDate}
+                    onClose={() => setShowReservationModal(false)}
+                    onConfirm={handleReserve}
+                />
+            )}
+
             {isHovered && deskStatus === DESK_STATUS.OCCUPIED_SELF && <CancelButton />}
+
             {isHovered && deskStatus === DESK_STATUS.OCCUPIED_OTHER && reservedOtherDetails && (
                 <p>
                     Reserved by: {reservedOtherDetails.firstName} {reservedOtherDetails.lastName}
@@ -64,6 +97,37 @@ const DeskCard = ({ desk, user, fromDate, toDate }) => {
 
 export default DeskCard;
 
+const ReserveButton = ({ onClick }) => {
+    return <button onClick={onClick}>Reserve</button>;
+};
+
 const CancelButton = () => {
     return <button>Cancel</button>;
+};
+
+const ReservationModal = ({ desk, initialFromDate, initialToDate, onClose, onConfirm }) => {
+    const [fromDate, setFromDate] = useState(initialFromDate);
+    const [toDate, setToDate] = useState(initialToDate);
+
+    const handleSubmit = (event) => {
+        event.preventDefault();
+        
+        onConfirm(desk.id, fromDate, toDate);
+    };
+
+    return (
+        <div>
+            <form onSubmit={handleSubmit}>
+                <h2>Reserve Desk {desk.number}</h2>
+                <label>From:</label>
+                <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
+                <label>To:</label>
+                <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} />
+                <button type="submit">Confirm Reservation</button>
+                <button type="button" onClick={onClose}>
+                    Cancel
+                </button>
+            </form>
+        </div>
+    );
 };
