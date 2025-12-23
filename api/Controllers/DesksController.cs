@@ -23,6 +23,7 @@ public class DesksController : ControllerBase
     {
         var desks = await _context.Desks
             .Include(d => d.Reservations)
+                .ThenInclude(r => r.User)
             .Include(d => d.Maintenances)
             .ToListAsync();
 

@@ -1,6 +1,7 @@
 using Models;
 using Data;
 using Microsoft.AspNetCore.Mvc;
+using DTOs.Users;
 
 namespace Controllers;
 
@@ -23,6 +24,14 @@ public class UsersController : ControllerBase
         {
             return NotFound();
         }
-        return Ok(user); // map to dto later
+
+        var userDto = new UserResponseDto
+        {
+            Id = user.Id,
+            FirstName = user.FirstName,
+            LastName = user.LastName
+        };
+
+        return Ok(userDto); // map to dto later
     }
 }
